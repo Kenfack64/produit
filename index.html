@@ -2,29 +2,396 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - CosmoPro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dashboard CosmoPro - Responsive</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts + Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <style>
-        /* Ajustements spécifiques */
+        /* ---------- RESET & VARIABLES ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0c10;
+            --sidebar-bg: #111216;
+            --card-bg: #ffffff;
+            --text-primary: #1e1f2a;
+            --text-secondary: #5a5c6e;
+            --accent: #d4af37;
+            --accent-hover: #c4a02e;
+            --border-light: #eef2f6;
+            --shadow-sm: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-md: 0 12px 28px rgba(0,0,0,0.08);
+            --transition: all 0.25s ease;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f4f6fa;
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ---------- SIDEBAR (DESKTOP FIRST) ---------- */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(0px);
+            color: #eef2ff;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.25rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            transition: var(--transition);
+            z-index: 100;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f5e7a3, #d4af37);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 2.5rem;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logo::before {
+            content: "✨";
+            font-size: 1.8rem;
+            background: none;
+            -webkit-background-clip: unset;
+            color: #d4af37;
+        }
+
+        .sidebar a {
+            color: #b1b3c9;
+            text-decoration: none;
+            padding: 0.85rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .sidebar a i {
+            width: 26px;
+            font-size: 1.25rem;
+            text-align: center;
+        }
+
+        .sidebar a:hover {
+            background: rgba(212, 175, 55, 0.12);
+            color: #ffffff;
+        }
+
+        .sidebar a.active {
+            background: linear-gradient(95deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05));
+            color: #d4af37;
+            border-left: 3px solid #d4af37;
+        }
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.8rem 2.2rem;
+            overflow-x: auto;
+            transition: var(--transition);
+        }
+
+        /* Header avec recherche */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(125deg, #23263b, #3a2e1f);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .header input {
+            background: white;
+            border: 1px solid var(--border-light);
+            padding: 0.8rem 1.5rem;
+            border-radius: 60px;
+            width: 280px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.2);
+        }
+
+        /* CARDS GRID - RESPONSIVE */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            padding: 1.5rem 1.2rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid rgba(212,175,55,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent);
+        }
+
+        .card i {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .card strong {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e1f2a;
+            letter-spacing: -0.5px;
+        }
+
+        .card span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* GRAPHIQUE CONTAINER */
         .chart-container {
             background: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-top: 30px;
+            padding: 1.5rem;
+            border-radius: 28px;
+            box-shadow: var(--shadow-sm);
+            margin-top: 0.5rem;
+            transition: var(--transition);
+            border: 1px solid #f0f0f0;
+        }
+
+        .chart-container h3 {
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.3rem;
+            color: #2c2e3a;
+        }
+
+        canvas#salesChart {
+            max-height: 380px;
+            width: 100% !important;
+        }
+
+        /* ========== RESPONSIVE BREAKPOINTS ========== */
+        @media screen and (max-width: 992px) {
+            .sidebar {
+                width: 250px;
+                padding: 1.5rem 1rem;
+            }
+            .main {
+                padding: 1.5rem;
+            }
+            .card strong {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Tablettes & petits écrans : sidebar se transforme en barre horizontale */
+        @media screen and (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.8rem 1.5rem;
+                position: sticky;
+                top: 0;
+                z-index: 200;
+                backdrop-filter: blur(12px);
+                background: rgba(17, 18, 22, 0.96);
+                border-bottom: 1px solid rgba(212,175,55,0.3);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+
+            .logo {
+                margin-bottom: 0;
+                font-size: 1.5rem;
+            }
+            .logo::before {
+                font-size: 1.4rem;
+            }
+
+            .sidebar a {
+                padding: 0.5rem 0.9rem;
+                margin: 0;
+                font-size: 0.85rem;
+                gap: 8px;
+                border-radius: 40px;
+            }
+
+            .sidebar a i {
+                font-size: 1rem;
+                width: auto;
+            }
+
+            .sidebar a.active {
+                border-left: none;
+                background: rgba(212,175,55,0.2);
+            }
+
+            .main {
+                padding: 1.2rem;
+            }
+
+            .header {
+                margin-top: 0.5rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .header input {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .cards {
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+
+            .card {
+                padding: 1rem;
+                align-items: center;
+                text-align: center;
+            }
+
+            .card strong {
+                font-size: 1.4rem;
+            }
+
+            .chart-container {
+                padding: 1rem;
+            }
+        }
+
+        /* Petits mobiles (≤ 480px) : encore plus compact */
+        @media screen and (max-width: 480px) {
+            .sidebar {
+                padding: 0.5rem 0.8rem;
+                justify-content: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+            .logo {
+                font-size: 1.2rem;
+                margin-right: 0.5rem;
+            }
+            .sidebar a {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.75rem;
+            }
+            .sidebar a i {
+                font-size: 0.85rem;
+            }
+            .main {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            .card strong {
+                font-size: 1.2rem;
+            }
+            .card i {
+                font-size: 1.5rem;
+            }
+            .card span {
+                font-size: 0.7rem;
+            }
+            .chart-container h3 {
+                font-size: 1rem;
+            }
+        }
+
+        /* Gestion du défilement horizontal (sécurité) */
+        .main::-webkit-scrollbar {
+            height: 5px;
+            width: 5px;
+        }
+        .main::-webkit-scrollbar-track {
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        .main::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
+    <!-- Sidebar (responsive : devient topbar sur mobile) -->
     <div class="sidebar">
-        <div class="logo">✨ CosmoPro</div>
+        <div class="logo">CosmoPro</div>
         <a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
         <a href="products.html"><i class="fas fa-box"></i> Produits</a>
         <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
@@ -36,72 +403,148 @@
     <div class="main">
         <div class="header">
             <h1>Tableau de bord</h1>
-            <input type="text" placeholder="Rechercher...">
+            <input type="text" placeholder="🔍 Rechercher un produit, client...">
         </div>
 
-        <!-- Cards -->
+        <!-- Cards (KPI) -->
         <div class="cards">
             <div class="card">
-                <i class="fas fa-chart-line" style="color: var(--accent); font-size: 24px;"></i>
+                <i class="fas fa-chart-line"></i>
                 <strong id="revenue">0 FCFA</strong>
                 <span>Chiffre d'affaires (mois)</span>
             </div>
             <div class="card">
-                <i class="fas fa-boxes" style="color: var(--accent); font-size: 24px;"></i>
+                <i class="fas fa-boxes"></i>
                 <strong id="totalProducts">0</strong>
                 <span>Produits en stock</span>
             </div>
             <div class="card">
-                <i class="fas fa-user-friends" style="color: var(--accent); font-size: 24px;"></i>
+                <i class="fas fa-user-friends"></i>
                 <strong id="totalClients">0</strong>
                 <span>Clientes actives</span>
             </div>
             <div class="card">
-                <i class="fas fa-fire" style="color: var(--accent); font-size: 24px;"></i>
+                <i class="fas fa-fire"></i>
                 <strong>Top 5</strong>
                 <span>Produits populaires</span>
             </div>
         </div>
 
-        <!-- Graphique -->
+        <!-- Graphique : Évolution des ventes -->
         <div class="chart-container">
-            <h3>Évolution des ventes (30 derniers jours)</h3>
-            <canvas id="salesChart" style="width:100%; max-height:400px;"></canvas>
+            <h3><i class="fas fa-chart-simple" style="margin-right: 8px; color: var(--accent);"></i> Évolution des ventes (30 derniers jours)</h3>
+            <canvas id="salesChart"></canvas>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/app.js"></script>
     <script>
-        // Simulation de données pour le graphique
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'],
-                    datasets: [{
-                        label: 'Ventes (FCFA)',
-                        data: [120000, 150000, 180000, 220000],
-                        borderColor: '#d4af37',
-                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    }
+        // Simulation dynamique des données + graphique responsive
+        (function() {
+            // Attendre que le DOM soit prêt
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- Mise à jour des cartes avec données simulées (réalistes) ---
+                const revenueElement = document.getElementById('revenue');
+                const totalProductsElem = document.getElementById('totalProducts');
+                const totalClientsElem = document.getElementById('totalClients');
+                
+                if (revenueElement) revenueElement.innerText = '220 000 FCFA';
+                if (totalProductsElem) totalProductsElem.innerText = '156';
+                if (totalClientsElem) totalClientsElem.innerText = '89';
+                
+                // --- Création du graphique Chart.js avec adaptation responsive ---
+                const canvas = document.getElementById('salesChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Données plus détaillées sur 4 semaines (pour un rendu propre)
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'],
+                            datasets: [{
+                                label: 'Ventes (FCFA)',
+                                data: [120000, 150000, 180000, 220000],
+                                borderColor: '#d4af37',
+                                backgroundColor: 'rgba(212, 175, 55, 0.08)',
+                                borderWidth: 3,
+                                pointBackgroundColor: '#d4af37',
+                                pointBorderColor: '#fff',
+                                pointRadius: 5,
+                                pointHoverRadius: 7,
+                                tension: 0.3,
+                                fill: true,
+                                pointBorderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    display: false,   // légende discrète, plus épurée
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let value = context.raw;
+                                            return '💰 ' + value.toLocaleString() + ' FCFA';
+                                        }
+                                    },
+                                    backgroundColor: '#111216',
+                                    titleColor: '#d4af37',
+                                    bodyColor: '#f0f0f0'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: '#eef2f0',
+                                        drawBorder: false,
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString() + ' FCFA';
+                                        },
+                                        stepSize: 50000,
+                                        font: { size: 11 }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Montant (FCFA)',
+                                        color: '#5a5c6e',
+                                        font: { weight: '500', size: 12 }
+                                    }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { font: { size: 12, weight: '500' } }
+                                }
+                            },
+                            elements: {
+                                line: {
+                                    borderJoin: 'round'
+                                }
+                            },
+                            layout: {
+                                padding: {
+                                    top: 15,
+                                    bottom: 10,
+                                    left: 5,
+                                    right: 5
+                                }
+                            }
+                        }
+                    });
                 }
+                
+                // Bonus : simulation de chargement fluide (pourrait être étendu)
+                console.log('Dashboard responsive chargé - CosmoPro');
             });
-
-            // Mettre à jour les cards (simulation)
-            document.getElementById('revenue').innerText = '220 000 FCFA';
-            document.getElementById('totalProducts').innerText = '156';
-            document.getElementById('totalClients').innerText = '89';
-        });
+        })();
     </script>
+    <!-- Note : Aucun fichier CSS externe nécessaire, tout est intégré avec une logique responsive parfaite 
+         qui s'adapte à tous les écrans (ordinateur, tablette, mobile). 
+         Les classes et ID sont conservés pour compatibilité avec d'éventuels scripts js/app.js -->
 </body>
 </html>
