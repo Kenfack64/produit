@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produits - CosmoPro</title>
+
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- CSS global -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">✨ CosmoPro</div>
+        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="products.html" class="active"><i class="fas fa-box"></i> Produits</a>
+        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
+        <a href="sales.html"><i class="fas fa-shopping-cart"></i> Ventes</a>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="main">
+        <div class="header">
+            <h1>Gestion des produits</h1>
+            <button class="btn" id="showFormBtn"><i class="fas fa-plus"></i> Nouveau produit</button>
+        </div>
+
+        <!-- Formulaire d'ajout (caché par défaut) -->
+        <div class="form-card" id="productFormContainer" style="display: none;">
+            <h3 id="formTitle">Ajouter un produit</h3>
+            <form id="productForm">
+                <!-- Champ caché pour l'ID en mode édition -->
+                <input type="hidden" id="productId">
+
+                <div class="form-group">
+                    <label>Nom du produit *</label>
+                    <input type="text" id="name" placeholder="Ex: Crème hydratante" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Marque</label>
+                    <input type="text" id="brand" placeholder="Ex: L'Oréal">
+                </div>
+
+                <div class="form-group">
+                    <label>Catégorie</label>
+                    <select id="category">
+                        <option value="Maquillage">Maquillage</option>
+                        <option value="Soins">Soins</option>
+                        <option value="Parfums">Parfums</option>
+                    </select>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Teinte</label>
+                        <input type="text" id="shade" placeholder="Ex: Rose pâle">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Type de peau</label>
+                        <input type="text" id="skin_type" placeholder="Ex: Sèche">
+                    </div>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Prix d'achat (FCFA)</label>
+                        <input type="number" id="purchase_price" placeholder="0">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Prix de vente (FCFA)</label>
+                        <input type="number" id="sale_price" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Date d'expiration</label>
+                        <input type="date" id="expiry_date">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Quantité en stock</label>
+                        <input type="number" id="quantity" placeholder="0" min="0">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="formSubmitBtn">Enregistrer</button>
+                <button type="button" class="btn-outline" id="cancelFormBtn">Annuler</button>
+            </form>
+        </div>
+
+        <!-- Tableau des produits -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Marque</th>
+                        <th>Catégorie</th>
+                        <th>Stock</th>
+                        <th>Expiration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productTable">
+                    <!-- Les lignes seront injectées par JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Au chargement de la page, on charge les produits et on attache les événements
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+
+            // Afficher le formulaire d'ajout
+            document.getElementById('showFormBtn').addEventListener('click', function() {
+                resetForm();
+                document.getElementById('formTitle').innerText = 'Ajouter un produit';
+                document.getElementById('productFormContainer').style.display = 'block';
+            });
+
+            // Cacher le formulaire
+            document.getElementById('cancelFormBtn').addEventListener('click', function() {
+                document.getElementById('productFormContainer').style.display = 'none';
+            });
+
+            // Soumission du formulaire (ajout ou modification)
+            document.getElementById('productForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Récupération des données
+                const productData = {
+                    id: document.getElementById('productId').value,
+                    name: document.getElementById('name').value,
+                    brand: document.getElementById('brand').value,
+                    category: document.getElementById('category').value,
+                    shade: document.getElementById('shade').value,
+                    skin_type: document.getElementById('skin_type').value,
+                    purchase_price: document.getElementById('purchase_price').value,
+                    sale_price: document.getElementById('sale_price').value,
+                    expiry_date: document.getElementById('expiry_date').value,
+                    quantity: document.getElementById('quantity').value
+                };
+
+                // Déterminer s'il s'agit d'un ajout ou d'une modification
+                const isEdit = productData.id !== '';
+                const url = isEdit ? 'backend/api/update_product.php' : 'backend/api/add_product.php';
+                const method = 'POST';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(productData)
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert(isEdit ? 'Produit modifié avec succès' : 'Produit ajouté avec succès');
+                        loadProducts(); // Recharger la liste
+                        document.getElementById('productFormContainer').style.display = 'none';
+                        resetForm();
+                    } else {
+                        alert('Erreur : ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Erreur réseau : ' + error.message);
+                }
+            });
+        });
+
+        // Fonction pour charger les produits depuis le backend
+        async function loadProducts() {
+    try {
+        const response = await fetch('backend/api/get_products.php');
+        console.log('Statut HTTP:', response.status);
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP ${response.status}`);
+        }
+
+        // Récupérer la réponse comme texte (car le type MIME est incorrect)
+        const text = await response.text();
+        console.log('Réponse brute:', text);
+
+        // Parser manuellement le JSON
+        const products = JSON.parse(text);
+
+        if (!Array.isArray(products)) {
+            throw new Error('La réponse n\'est pas un tableau');
+        }
+
+        const tbody = document.getElementById('productTable');
+        tbody.innerHTML = '';
+        products.forEach(p => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${p.name}</td>
+                <td>${p.brand || '-'}</td>
+                <td>${p.category || '-'}</td>
+                <td>${p.quantity}</td>
+                <td>${p.expiry_date || '-'}</td>
+                <td>
+                    <i class="fas fa-edit" style="color: var(--accent); cursor:pointer;" onclick="editProduct(${p.id})"></i>
+                    <i class="fas fa-trash" style="color: #e74c3c; margin-left:10px; cursor:pointer;" onclick="deleteProduct(${p.id})"></i>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Erreur chargement produits:', error.message);
+        alert('Impossible de charger les produits. Détail dans la console.');
+    }
+}
+
+        // Fonction pour pré-remplir le formulaire avec les données d'un produit (édition)
+        window.editProduct = async function(id) {
+            try {
+                const response = await fetch(`backend/api/get_product.php?id=${id}`);
+                if (!response.ok) throw new Error('Erreur réseau');
+                const product = await response.json();
+
+                // Remplir le formulaire
+                document.getElementById('productId').value = product.id;
+                document.getElementById('name').value = product.name;
+                document.getElementById('brand').value = product.brand || '';
+                document.getElementById('category').value = product.category;
+                document.getElementById('shade').value = product.shade || '';
+                document.getElementById('skin_type').value = product.skin_type || '';
+                document.getElementById('purchase_price').value = product.purchase_price || 0;
+                document.getElementById('sale_price').value = product.sale_price || 0;
+                document.getElementById('expiry_date').value = product.expiry_date || '';
+                document.getElementById('quantity').value = product.quantity || 0;
+
+                document.getElementById('formTitle').innerText = 'Modifier le produit';
+                document.getElementById('productFormContainer').style.display = 'block';
+            } catch (error) {
+                alert('Erreur lors du chargement du produit : ' + error.message);
+            }
+        };
+
+        // Fonction pour supprimer un produit
+        window.deleteProduct = async function(id) {
+            if (!confirm('Supprimer ce produit ?')) return;
+
+            try {
+                const response = await fetch('backend/api/delete_product.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadProducts();
+                } else {
+                    alert('Erreur : ' + result.message);
+                }
+            } catch (error) {
+                alert('Erreur réseau : ' + error.message);
+            }
+        };
+
+        // Réinitialiser le formulaire
+        function resetForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+        }
+    </script>
+</body>
+</html>

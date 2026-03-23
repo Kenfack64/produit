@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CosmoPro</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Ajustements spécifiques */
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">✨ CosmoPro</div>
+        <a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="products.html"><i class="fas fa-box"></i> Produits</a>
+        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
+        <a href="sales.html"><i class="fas fa-shopping-cart"></i> Ventes</a>
+        <a href="settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <div class="header">
+            <h1>Tableau de bord</h1>
+            <input type="text" placeholder="Rechercher...">
+        </div>
+
+        <!-- Cards -->
+        <div class="cards">
+            <div class="card">
+                <i class="fas fa-chart-line" style="color: var(--accent); font-size: 24px;"></i>
+                <strong id="revenue">0 FCFA</strong>
+                <span>Chiffre d'affaires (mois)</span>
+            </div>
+            <div class="card">
+                <i class="fas fa-boxes" style="color: var(--accent); font-size: 24px;"></i>
+                <strong id="totalProducts">0</strong>
+                <span>Produits en stock</span>
+            </div>
+            <div class="card">
+                <i class="fas fa-user-friends" style="color: var(--accent); font-size: 24px;"></i>
+                <strong id="totalClients">0</strong>
+                <span>Clientes actives</span>
+            </div>
+            <div class="card">
+                <i class="fas fa-fire" style="color: var(--accent); font-size: 24px;"></i>
+                <strong>Top 5</strong>
+                <span>Produits populaires</span>
+            </div>
+        </div>
+
+        <!-- Graphique -->
+        <div class="chart-container">
+            <h3>Évolution des ventes (30 derniers jours)</h3>
+            <canvas id="salesChart" style="width:100%; max-height:400px;"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Simulation de données pour le graphique
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'],
+                    datasets: [{
+                        label: 'Ventes (FCFA)',
+                        data: [120000, 150000, 180000, 220000],
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Mettre à jour les cards (simulation)
+            document.getElementById('revenue').innerText = '220 000 FCFA';
+            document.getElementById('totalProducts').innerText = '156';
+            document.getElementById('totalClients').innerText = '89';
+        });
+    </script>
+</body>
+</html>

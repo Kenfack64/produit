@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventes - CosmoPro</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .pos-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .cart-panel {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .cart-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-total {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-align: right;
+            margin: 20px 0;
+        }
+
+        .product-search {
+            margin-bottom: 20px;
+        }
+
+        .product-search input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .client-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">✨ CosmoPro</div>
+        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="products.html"><i class="fas fa-box"></i> Produits</a>
+        <a href="clients.html"><i class="fas fa-users"></i> Clients</a>
+        <a href="sales.html" class="active"><i class="fas fa-shopping-cart"></i> Ventes</a>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <h1>Interface de caisse</h1>
+            <button class="btn" id="newSaleBtn"><i class="fas fa-plus"></i> Nouvelle vente</button>
+        </div>
+
+        <!-- Interface de vente (cachée par défaut, affichée quand on clique sur Nouvelle vente) -->
+        <div id="posInterface" style="display: none;">
+            <div class="pos-container">
+                <!-- Panier -->
+                <div class="cart-panel">
+                    <div class="cart-header">
+                        <h3>Panier</h3>
+                        <span id="cartCount">0 article</span>
+                    </div>
+
+                    <!-- Recherche produit -->
+                    <div class="product-search">
+                        <input type="text" id="productSearch" placeholder="Rechercher un produit...">
+                        <div class="search-results" id="searchResults"></div>
+                    </div>
+
+                    <!-- Sélection client -->
+                    <select class="client-select" id="clientSelect">
+                        <option value="">Client anonyme</option>
+                        <!-- Clients dynamiques -->
+                    </select>
+
+                    <!-- Liste des articles du panier -->
+                    <div class="cart-items" id="cartItems">
+                        <!-- Exemple d'article -->
+                    </div>
+
+                    <!-- Total -->
+                    <div class="cart-total" id="cartTotal">0 FCFA</div>
+
+                    <!-- Actions -->
+                    <button class="btn" style="width:100%;" id="validateSaleBtn">Valider la vente</button>
+                </div>
+
+                <!-- Aide / Récapitulatif (peut être vide) -->
+                <div class="cart-panel">
+                    <h3>Instructions</h3>
+                    <p>Recherchez un produit, sélectionnez la quantité, puis ajoutez au panier.</p>
+                    <p>Le client peut être sélectionné pour cumuler des points fidélité.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historique des ventes récentes -->
+        <div class="table-container" style="margin-top: 30px;">
+            <h3>Dernières ventes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Produits</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="salesHistoryTable">
+                    <!-- Simulé -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Données simulées
+        let products = [
+            { id: 1, name: 'Crème hydratante', price: 5000, stock: 45 },
+            { id: 2, name: 'Rouge à lèvres', price: 3500, stock: 12 },
+            { id: 3, name: 'Masque visage', price: 2500, stock: 30 },
+            { id: 4, name: 'Gel nettoyant', price: 4000, stock: 18 }
+        ];
+
+        let clients = [
+            { id: 1, name: 'Marie Dupont', points: 250 },
+            { id: 2, name: 'Sophie Martin', points: 120 },
+            { id: 3, name: 'Jean Claude', points: 480 }
+        ];
+
+        let salesHistory = [
+            { id: 1, date: '2025-03-20 14:30', client: 'Marie Dupont', items: ['Crème hydratante'], total: 5000 },
+            { id: 2, date: '2025-03-19 11:15', client: 'Sophie Martin', items: ['Rouge à lèvres', 'Masque visage'], total: 6000 },
+        ];
+
+        let cart = [];
+
+        // Remplir le select client
+        function populateClientSelect() {
+            const select = document.getElementById('clientSelect');
+            select.innerHTML = '<option value="">Client anonyme</option>';
+            clients.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = `${c.name} (${c.points} pts)`;
+                select.appendChild(option);
+            });
+        }
+
+        // Afficher l'historique des ventes
+        function renderSalesHistory() {
+            const tbody = document.getElementById('salesHistoryTable');
+            tbody.innerHTML = '';
+            salesHistory.forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.date}</td>
+                    <td>${s.client}</td>
+                    <td>${s.items.join(', ')}</td>
+                    <td>${s.total} FCFA</td>
+                    <td><i class="fas fa-print" style="color: var(--accent); cursor:pointer;" onclick="printInvoice(${s.id})"></i></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Recherche de produits
+        document.getElementById('productSearch').addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            if (search.length < 1) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            const filtered = products.filter(p => p.name.toLowerCase().includes(search));
+            if (filtered.length === 0) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            resultsDiv.innerHTML = '';
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.textContent = `${p.name} - ${p.price} FCFA (Stock: ${p.stock})`;
+                div.onclick = () => addToCart(p);
+                resultsDiv.appendChild(div);
+            });
+            resultsDiv.style.display = 'block';
+        });
+
+        // Ajouter au panier
+        function addToCart(product) {
+            const existing = cart.find(item => item.id === product.id);
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            renderCart();
+            document.getElementById('productSearch').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+        }
+
+        // Afficher le panier
+        function renderCart() {
+            const cartDiv = document.getElementById('cartItems');
+            cartDiv.innerHTML = '';
+            let total = 0;
+            let count = 0;
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                count += item.quantity;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'cart-item';
+                itemDiv.innerHTML = `
+                    <span>${item.name} x${item.quantity}</span>
+                    <span>${item.price * item.quantity} FCFA <i class="fas fa-trash" style="color:#e74c3c; cursor:pointer;" onclick="removeFromCart(${item.id})"></i></span>
+                `;
+                cartDiv.appendChild(itemDiv);
+            });
+            document.getElementById('cartTotal').innerText = total + ' FCFA';
+            document.getElementById('cartCount').innerText = count + (count > 1 ? ' articles' : ' article');
+        }
+
+        // Retirer du panier
+        window.removeFromCart = function(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            renderCart();
+        };
+
+        // Valider la vente
+        document.getElementById('validateSaleBtn').addEventListener('click', function() {
+            if (cart.length === 0) {
+                alert('Panier vide');
+                return;
+            }
+            const clientId = document.getElementById('clientSelect').value;
+            const client = clients.find(c => c.id == clientId) || { name: 'Anonyme', points: 0 };
+            const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+            // Ajouter à l'historique
+            const newSale = {
+                id: salesHistory.length + 1,
+                date: new Date().toLocaleString('fr-FR'),
+                client: client.name,
+                items: cart.map(item => item.name),
+                total: total
+            };
+            salesHistory.unshift(newSale);
+            renderSalesHistory();
+
+            // Mettre à jour les points du client (1 point par 100 FCFA par exemple)
+            if (clientId) {
+                const pointsEarned = Math.floor(total / 100);
+                client.points += pointsEarned;
+                // Mettre à jour l'affichage
+                populateClientSelect();
+            }
+
+            // Vider le panier
+            cart = [];
+            renderCart();
+            alert('Vente enregistrée !');
+        });
+
+        // Afficher/masquer l'interface de caisse
+        document.getElementById('newSaleBtn').addEventListener('click', function() {
+            const pos = document.getElementById('posInterface');
+            pos.style.display = pos.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Impression facture (simulée)
+        window.printInvoice = function(saleId) {
+            const sale = salesHistory.find(s => s.id === saleId);
+            if (sale) {
+                alert('Facture générée pour la vente du ' + sale.date + ' d\'un montant de ' + sale.total + ' FCFA');
+                // Ici ouvrir une fenêtre d'impression ou générer un PDF
+            }
+        };
+
+        // Initialisation
+        populateClientSelect();
+        renderSalesHistory();
+        renderCart();
+    </script>
+</body>
+</html>
